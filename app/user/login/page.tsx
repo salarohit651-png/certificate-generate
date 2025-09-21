@@ -25,6 +25,10 @@ export default function UserLogin() {
       setError(
         "You already have an active session for this profile. Please use a different browser or clear your session.",
       )
+    } else if (errorParam === "invalid_or_used_link") {
+      setError(
+        "The access link you used is invalid, expired, or has already been used. Please login to generate a new link.",
+      )
     }
   }, [searchParams])
 
@@ -74,6 +78,12 @@ export default function UserLogin() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">User Login</CardTitle>
           <CardDescription>Enter your email and phone number to access your profile</CardDescription>
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              <strong>Note:</strong> Each login generates a new one-time access link. Previous links will become
+              invalid.
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

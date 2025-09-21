@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 import User from "@/models/User"
+import AccessLink from "@/models/AccessLink"
 import bcrypt from "bcryptjs"
-import { generateViewToken } from "@/lib/url-utils"
+import crypto from "crypto"
 import jwt from "jsonwebtoken"
 
 export async function POST(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[v0] Connecting to database for user login")
-    await connectToDatabase()
+    await connectDB()
 
     // Find user by email and ensure they're not deleted
     console.log("[v0] Searching for user with email:", email)
@@ -42,10 +43,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email or phone number" }, { status: 401 })
     }
 
-    console.log("[v0] Phone number verified, generating profile link")
-    // Generate profile link using registration number
-    const profileToken = generateViewToken(user.registrationNumber)
-    const profileLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/user/${profileToken}`
+    console.log("[v0] Phone number verified, generating one-time access link")
+
+    const timestamp = Date.now()
+    const randomBytes = crypto.randomBytes(16).toString("hex")
+    const newToken = Buffer.from(`${user.registrationNumber}-${timestamp}-${randomBytes}`).toString("base64url")
+
+    // Create access link record in database
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
+
+    const accessLink = new AccessLink({
+      token: newToken,
+      registrationNumber: user.registrationNumber,
+      isUsed: false,
+      expiresAt,
+    })
+
+    await accessLink.save()
+
+    const profileLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/user/${newToken}`
 
     const sessionToken = jwt.sign(
       {
@@ -58,13 +74,13 @@ export async function POST(request: NextRequest) {
       { expiresIn: "24h" }, // Token expires in 24 hours
     )
 
-    console.log("[v0] Login successful for user:", user._id, "Profile link generated")
+    console.log("[v0] Login successful for user:", user._id, "One-time profile link generated")
 
     return NextResponse.json({
       success: true,
       profileLink,
-      token: sessionToken, // Return session token instead of setting cookies
-      message: "Login successful! Redirecting to your profile...",
+      token: sessionToken,
+      message: "Login successful! Redirecting to your one-time profile link...",
     })
   } catch (error) {
     console.error("[v0] User login error:", error)

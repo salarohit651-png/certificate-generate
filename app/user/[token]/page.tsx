@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation"
-import { connectDB } from "@/lib/mongodb" // Fixed import to use correct connectDB function
+import { redirect } from "next/navigation"
+import { connectDB } from "@/lib/mongodb"
 import User from "@/models/User"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -15,9 +15,9 @@ interface UserViewPageProps {
 
 async function getUserByToken(token: string) {
   try {
-    const registrationNumber = decodeViewToken(token)
+    const registrationNumber = await decodeViewToken(token)
     if (!registrationNumber) {
-      console.log("[v0] Invalid or expired token")
+      console.log("[v0] Invalid, expired, or already used token")
       return null
     }
 
@@ -34,52 +34,26 @@ async function getUserByToken(token: string) {
   }
 }
 
-function SessionValidator({ token }: { token: string }) {
-  return (
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `
-          (function() {
-            const sessionKey = 'user_session_${token}';
-            const currentSession = sessionStorage.getItem(sessionKey);
-            
-            if (currentSession) {
-              // User already has a session for this token, redirect to login
-              window.location.href = '/user/login?error=session_exists&token=${token}';
-              return;
-            }
-            
-            // Set session for this token
-            sessionStorage.setItem(sessionKey, Date.now().toString());
-            
-            // Clear session when page is unloaded
-            window.addEventListener('beforeunload', function() {
-              sessionStorage.removeItem(sessionKey);
-            });
-          })();
-        `,
-      }}
-    />
-  )
-}
-
 export default async function UserViewPage({ params }: UserViewPageProps) {
   const user = await getUserByToken(params.token)
 
   if (!user) {
-    notFound()
+    redirect("/user/login?error=invalid_or_used_link")
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 relative">
-      <SessionValidator token={params.token} />
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="bg-amber-100 border border-amber-400 text-amber-800 px-4 py-2 rounded-lg shadow-lg">
+          <p className="text-sm font-medium">⚠️ This is a one-time access link. It will expire after viewing.</p>
+        </div>
+      </div>
 
-      <div className="fixed top-4 left-4 z-10">
+      <div className="fixed top-16 left-4 z-10">
         <UserLogoutButton token={params.token} />
       </div>
 
-      {/* Profile Photo - Top Right */}
-      <div className="fixed top-4 right-4 z-10">
+      <div className="fixed top-16 right-4 z-10">
         <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
           <AvatarImage src={user.photoUrl || "/placeholder.svg"} alt={user.name} />
           <AvatarFallback className="text-lg font-semibold">
@@ -92,7 +66,6 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
         </Avatar>
       </div>
 
-      {/* QR Code - Bottom Right with 30px padding */}
       {user.qrCodeUrl && (
         <div className="fixed bottom-8 right-8 z-10">
           <div className="bg-white p-2 rounded-lg shadow-lg">
@@ -107,7 +80,7 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto mt-16">
         <Card className="shadow-lg">
           <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
             <CardTitle className="text-3xl font-bold">User Information</CardTitle>
@@ -205,7 +178,6 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
                   <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.collegeName}</div>
                 </div>
 
-                {/* Registration Date */}
                 <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <label className="text-sm font-medium text-blue-800">Registration Date</label>
                   <div className="mt-1 text-blue-900 font-semibold">

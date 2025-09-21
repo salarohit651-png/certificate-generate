@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongodb"
 import User from "@/models/User"
+import AccessLink from "@/models/AccessLink"
 import crypto from "crypto"
 import { checkAdminAuth } from "@/lib/auth"
 
@@ -27,18 +28,31 @@ export async function POST(request: NextRequest) {
     }
 
     const timestamp = Date.now()
-    const randomBytes = crypto.randomBytes(8).toString("hex")
+    const randomBytes = crypto.randomBytes(16).toString("hex")
     const newToken = Buffer.from(`${user.registrationNumber}-${timestamp}-${randomBytes}`).toString("base64url")
+
+    // Create access link record in database
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days expiry
+
+    const accessLink = new AccessLink({
+      token: newToken,
+      registrationNumber: user.registrationNumber,
+      isUsed: false,
+      expiresAt,
+    })
+
+    await accessLink.save()
 
     const publicProfileUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/user/${newToken}`
 
-    console.log("[v0] New unique profile link generated:", publicProfileUrl)
+    console.log("[v0] New one-time access link generated:", publicProfileUrl)
 
     return NextResponse.json({
       success: true,
       token: newToken,
       publicUrl: publicProfileUrl,
-      message: "New access link generated successfully",
+      message: "New one-time access link generated successfully",
+      expiresAt: expiresAt.toISOString(),
     })
   } catch (error) {
     console.error("[v0] Error generating link:", error)
