@@ -54,7 +54,7 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
   return (
     <div className="min-h-screen bg-[#89a9c2] flex items-center justify-center overflow-auto p-4">
       {/* Fixed PDF container */}
-      <div className="relative bg-[#e6eef0] rounded-md p-6 sm:w-[794px] sm:min-h-[1123px] w-full shadow-[18px_11px_4px_0px_#3333332e]">
+      <div className="relative bg-[#e6eef0] rounded-md p-6 sm:w-[794px] w-full shadow-[18px_11px_4px_0px_#3333332e]">
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="sm:w-[350px] w-[200px] rounded-full border-4 border-gray-300 flex items-center justify-center opacity-10">
@@ -164,15 +164,15 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
               <div className="flex gap-4">
                 <img
                   src="/images/iyceng.png"
-                  className="sm:w-[120px] sm:h-[100px] w-[50px]"
+                  className="sm:w-[150px] sm:h-[100px] w-[50px]"
                 />
                 <img
                   src="/images/swach-bharat.png"
-                  className="sm:w-[120px] sm:h-[100px] w-[50px]"
+                  className="sm:w-[150px] sm:h-[100px] w-[50px]"
                 />
                 <img
                   src="/images/esanjeevani.png"
-                  className="sm:w-[120px] sm:h-[100px] w-[50px]"
+                  className="sm:w-[150px] sm:h-[100px] w-[50px]"
                 />
               </div>
             </div>
