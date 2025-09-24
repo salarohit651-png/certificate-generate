@@ -101,7 +101,14 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
           <div className="flex items-start justify-between mb-8">
             <div>
               <h5 className="uppercase text-md font-semibold mb-5">
-                registration number: {user.registrationNumber}
+                <span className="hidden sm:inline">
+                  registration number: {user.registrationNumber}
+                </span>
+                <span className="inline sm:hidden">
+                  registration number:
+                  <br />
+                  {user.registrationNumber}
+                </span>
               </h5>
               <h5 className="normal-case font-semibold mb-5">
                 {new Date(user.createdAt).toLocaleDateString('en-IN', {
