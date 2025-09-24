@@ -1,213 +1,205 @@
-import { redirect } from "next/navigation"
-import { connectDB } from "@/lib/mongodb"
-import User from "@/models/User"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import Image from "next/image"
-import { decodeViewToken } from "@/lib/url-utils"
-import { UserLogoutButton } from "@/components/user-logout-button"
+import { notFound } from 'next/navigation';
+import { connectToDatabase } from '@/lib/mongodb';
+import User from '@/models/User';
+import Image from 'next/image';
+import { decodeViewToken } from '@/lib/url-utils';
 
 interface UserViewPageProps {
   params: {
-    token: string
-  }
+    token: string;
+  };
 }
 
 async function getUserByToken(token: string) {
   try {
-    const registrationNumber = await decodeViewToken(token)
+    const registrationNumber = await decodeViewToken(token);
     if (!registrationNumber) {
-      console.log("[v0] Invalid, expired, or already used token")
-      return null
+      console.log('[v0] Invalid, expired, or already used token');
+      return null;
     }
 
-    await connectDB()
-
-    const user = await User.findOne({ registrationNumber }).select("-hashedPassword")
+    const user = await User.findOne({ registrationNumber }).select(
+      '-hashedPassword'
+    );
     if (!user) {
-      console.log("[v0] User not found for registration number:", registrationNumber)
+      console.log(
+        '[v0] User not found for registration number:',
+        registrationNumber
+      );
     }
-    return user
+    return user;
   } catch (error) {
-    console.error("Error fetching user:", error)
-    return null
+    console.error('Error fetching user:', error);
+    return null;
   }
 }
 
 export default async function UserViewPage({ params }: UserViewPageProps) {
-  const user = await getUserByToken(params.token)
+  const user = await getUserByToken(params.token);
 
   if (!user) {
-    redirect("/user/login?error=invalid_or_used_link")
+    notFound();
   }
 
+  const personalInfo = [
+    { label: 'Full Name', value: user.name },
+    { label: 'Father/Husband Name', value: user.fatherHusbandName },
+    { label: 'Mobile Number', value: user.mobileNo },
+    { label: 'Email Address', value: user.emailId },
+    {
+      label: 'Date of Birth',
+      value: new Date(user.dateOfBirth).toLocaleDateString(),
+    },
+    { label: 'State', value: user.state },
+    { label: 'Address', value: user.address },
+  ];
+
+  const educationalInfo = [
+    { label: 'Course Name', value: user.courseName || 'Staff Nursing' },
+    { label: 'Experience', value: user.experience || 'N/A' },
+    { label: 'College Name', value: user.collegeName || 'N/A' },
+    {
+      label: 'Registration Number',
+      value: user.registrationNumber,
+    },
+    {
+      label: 'Last Updated',
+      value: new Date(user.updatedAt).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 relative">
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
-        <div className="bg-amber-100 border border-amber-400 text-amber-800 px-4 py-2 rounded-lg shadow-lg">
-          <p className="text-sm font-medium">⚠️ This is a one-time access link. It will expire after viewing.</p>
+    <div className="relative">
+      {/* Stamp / watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-64 h-64 sm:w-72 sm:h-72 rounded-full border-4 border-gray-300 flex items-center justify-center opacity-20 rotate-12">
+          <span className="text-gray-400 font-bold text-center text-lg sm:text-2xl">
+            HEALTH AND WELFARE MINISTRY
+          </span>
         </div>
       </div>
-
-      <div className="fixed top-16 left-4 z-10">
-        <UserLogoutButton token={params.token} />
-      </div>
-
-      <div className="fixed top-16 right-4 z-10">
-        <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
-          <AvatarImage src={user.photoUrl || "/placeholder.svg"} alt={user.name} />
-          <AvatarFallback className="text-lg font-semibold">
-            {user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      </div>
-
-      {user.qrCodeUrl && (
-        <div className="fixed bottom-8 right-8 z-10">
-          <div className="bg-white p-2 rounded-lg shadow-lg">
-            <Image
-              src={user.qrCodeUrl || "/placeholder.svg"}
-              alt="QR Code"
-              width={120}
-              height={120}
-              className="rounded"
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-4xl mx-auto mt-16">
-        <Card className="shadow-lg">
-          <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
-            <CardTitle className="text-3xl font-bold">User Information</CardTitle>
-            <p className="text-blue-100 mt-2">Registration Details</p>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800 border-b pb-2">Personal Information</h3>
-
-                {user.registrationFormTitle && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Registration Form Title</label>
-                    <div className="mt-1 p-3 bg-blue-50 rounded-md border border-blue-200 font-semibold text-blue-800">
-                      {user.registrationFormTitle}
+      <div className="min-h-screen flex items-center justify-center w-full">
+        <div className="max-w-[35%] w-full mx-auto">
+          <div className="bg-card text-card-foreground flex flex-col gap-6 shadow-lg">
+            <div className="border border-gray-300 m-4 p-4">
+              <div className="flex flex-col md:flex-row items-center justify-between w-full mb-8 gap-6">
+                <div className="flex items-center space-x-4 xl:space-x-6">
+                  <img alt="Increase font size" src="/images/emblem-dark.png" />
+                  <div className="text-left">
+                    <div className="text-xs font-bold text-gray-800 mb-1">
+                      स्वास्थ्य एवं परिवार कल्याण मंत्रालय
+                    </div>
+                    <div className="text-sm xl:text-base font-bold text-gray-800 mb-1">
+                      MINISTRY OF HEALTH &amp; FAMILY WELFARE
+                    </div>
+                    <div className="text-xs font-bold text-gray-800 mb-1">
+                      स्वास्थ्य एवं परिवार कल्याण विभाग
+                    </div>
+                    <div className="text-xs font-bold text-gray-800">
+                      DEPARTMENT OF HEALTH &amp; FAMILY WELFARE
                     </div>
                   </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Title</label>
-                    <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.title}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Full Name</label>
-                    <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.name}</div>
-                  </div>
                 </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Father/Husband Name</label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.fatherHusbandName}</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Mobile Number</label>
-                    <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.mobileNo}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Email Address</label>
-                    <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.emailId}</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Date of Birth</label>
-                    <div className="mt-1 p-3 bg-gray-50 rounded-md border">
-                      {new Date(user.dateOfBirth).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Pass out Percentage</label>
-                    <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.passoutPercentage}%</div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">State</label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.state}</div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Address</label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border min-h-[80px]">{user.address}</div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Registration Number</label>
-                  <div className="mt-1 p-3 bg-blue-50 rounded-md border border-blue-200 font-mono text-blue-800">
-                    {user.registrationNumber}
-                  </div>
-                </div>
+                <img
+                  src="/images/esanjeevani.png"
+                  alt="Family Welfare"
+                  className="object-contain sm:w-auto sm:h-auto md:max-w-[200px] max-w-[200px]"
+                />
+              </div>
+              <div className="certificate-title bg-gray-100 text-gray-800 p-2.5 max-w-[500px] rounded my-8 mx-auto">
+                <h1 className="text-center font-semibold text-base sm:text-lg md:text-xl lg:text-2xl">
+                  Staff Nursing Registration Letter
+                </h1>
               </div>
 
-              {/* Educational Information */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800 border-b pb-2">Educational Information</h3>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Course Name</label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.courseName}</div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Experience</label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.experience}</div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-600">College Name</label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border">{user.collegeName}</div>
-                </div>
-
-                <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <label className="text-sm font-medium text-blue-800">Registration Date</label>
-                  <div className="mt-1 text-blue-900 font-semibold">
-                    {new Date(user.createdAt).toLocaleDateString("en-IN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+              <div className="max-w-4xl mx-auto">
+                <div className="mb-8">
+                  <div className="flex gap-4">
+                    <div>
+                      {personalInfo.map((info) => (
+                        <div key={info.label} className="flex flex-col gap-1">
+                          <h3 className="font-bold text-sm sm:text-base md:text-lg text-gray-600">
+                            {info.label}:
+                          </h3>
+                          <p className="text-sm sm:text-base md:text-lg">
+                            {info.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      {educationalInfo.map((info) => (
+                        <div key={info.label} className="flex flex-col gap-1">
+                          <h3 className="font-bold text-sm sm:text-base md:text-lg text-gray-600">
+                            {info.label}:
+                          </h3>
+                          <p className="text-sm sm:text-base md:text-lg">
+                            {info.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <label className="text-sm font-medium text-green-800">Last Updated</label>
-                  <div className="mt-1 text-green-900 font-semibold">
-                    {new Date(user.updatedAt).toLocaleDateString("en-IN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                <div className="mb-6 sm:mb-0 flex justify-start">
+                  <div className="bg-white flex-col flex justify-center items-center max-w-[250px] sm:max-w-[300px]">
+                    <Image
+                      src="/images/signature.png"
+                      alt="Signature"
+                      width={300}
+                      height={120}
+                      className="w-[200px] sm:w-[280px] h-auto object-contain"
+                    />
+                    <p className="font-bold text-sm sm:text-base mt-2 text-gray-700">
+                      Authorized Signature
+                    </p>
                   </div>
+                </div>
+                <div className="flex gap-8 lg:justify-end flex-wrap">
+                  <div className="bg-white p-1 flex items-center">
+                    <Image
+                      src="/images/swachBharat.png"
+                      alt="QR Code"
+                      width={200}
+                      height={120}
+                    />
+                  </div>
+                  <div className="bg-white p-1 flex items-center">
+                    <Image
+                      src="/images/iyceng.png"
+                      alt="QR Code"
+                      width={150}
+                      height={120}
+                    />
+                  </div>
+                  {user.qrCodeUrl && (
+                    <div>
+                      <div className="bg-white p-1 pl-4 text-center">
+                        <Image
+                          src={user.qrCodeUrl || '/placeholder.svg'}
+                          alt="QR Code"
+                          width={120}
+                          height={120}
+                        />
+                        <p className="text-xs text-gray-600 mt-2 font-bold">
+                          Scan to Verify
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
-  )
+  );
 }
