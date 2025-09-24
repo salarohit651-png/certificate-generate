@@ -123,3 +123,43 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Add this to globals.css or a CSS module */
+@keyframes scroll-left {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.scroll-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: scroll-left 10s linear infinite;
+}
+
+.scroll-marquee:hover {
+  animation-play-state: paused; /* pause on hover */
+}
+
+@media (max-width: 767px) {
+  * {
+    font-size: 12px !important;
+  }
+
+  .emblem-dark-logo div {
+    font-size: 6px !important;
+  }
+  .emblem-dark-logo img {
+    max-width: 25px;
+  }
+}
