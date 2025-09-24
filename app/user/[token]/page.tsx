@@ -57,7 +57,7 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
       <div className="relative bg-[#e6eef0] rounded-md p-6 sm:w-[794px] w-full shadow-[18px_11px_4px_0px_#3333332e]">
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="sm:w-[350px] w-[200px] rounded-full border-4 border-gray-300 flex items-center justify-center opacity-10">
+          <div className="sm:w-[550px] w-[200px] rounded-full border-4 border-gray-300 flex items-center justify-center opacity-10">
             <img src="/images/WaterMark.svg" />
           </div>
         </div>
