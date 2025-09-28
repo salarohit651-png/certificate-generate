@@ -55,12 +55,8 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
       logger: true,
     })
 
-    console.log("[v0] Verifying SMTP connection...")
     await transporter.verify()
-    console.log("[v0] ✅ SMTP connection verified successfully!")
 
-    console.log("[v0] Sending email to:", to)
-    console.log("[v0] Email subject:", subject)
 
     const info = await transporter.sendMail({
       from: `"Certificate System" <${smtpFromEmail}>`,
@@ -69,9 +65,6 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
       html,
     })
 
-    console.log("[v0] 🎉 Email sent successfully!")
-    console.log("[v0] Message ID:", info.messageId)
-    console.log("[v0] Email response:", info.response)
     return true
   } catch (error) {
     console.error("[v0] ❌ Email sending failed:", error)
@@ -91,12 +84,12 @@ export function getRegistrationEmailTemplate(userData: UserData | string, access
   const courseName = typeof userData === "object" ? userData.courseName : ""
 
   return `
-    <!DOCTYPE html>
+      <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Registration Successful</title>
+      <title>Ministry of Health</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -125,16 +118,13 @@ export function getRegistrationEmailTemplate(userData: UserData | string, access
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎉 Registration Successful!</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">Welcome to our Certificate System</p>
+          <h1 style="text-transform: uppercase;">Ministry of Health</h1>
         </div>
-        
         <div class="content">
-          <div class="success-icon">✅</div>
           
           <p class="welcome-text">
             Dear <strong>${userName}</strong>,<br>
-            Congratulations! Your registration has been completed successfully.
+            Congratulations! Your Login has been completed successfully.
           </p>
 
           ${
@@ -142,37 +132,21 @@ export function getRegistrationEmailTemplate(userData: UserData | string, access
               ? `
           <div class="user-details">
             <h3>📋 Your Registration Details</h3>
-            ${regNumber ? `<div class="detail-row"><span class="detail-label">Registration Number:</span><span class="detail-value">${regNumber}</span></div>` : ""}
-            <div class="detail-row"><span class="detail-label">Full Name:</span><span class="detail-value">${userName}</span></div>
             ${userEmail ? `<div class="detail-row"><span class="detail-label">Email:</span><span class="detail-value">${userEmail}</span></div>` : ""}
-            ${userMobile ? `<div class="detail-row"><span class="detail-label">Mobile:</span><span class="detail-value">${userMobile}</span></div>` : ""}
-            ${courseName ? `<div class="detail-row"><span class="detail-label">Course:</span><span class="detail-value">${courseName}</span></div>` : ""}
+            ${userMobile ? `<div class="detail-row"><span class="detail-label">Password:</span><span class="detail-value">${userMobile}</span></div>` : ""}
           </div>
           `
               : ""
           }
 
           <div style="text-align: center; margin: 30px 0;">
-            <p style="font-size: 16px; color: #495057; margin-bottom: 20px;">
-              Click the button below to access your profile and view your details:
+            <p style="font-size: 16px; color: #495057; margin-bottom: 2px;">
+              Click the button below to login your profile:
             </p>
-            <a href="${accessLink}" class="access-button">
-              🔗 Access Your Profile
+            <a href="${accessLink} class="access-button">
+               Login Your Profile
             </a>
           </div>
-
-          <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #1565c0; font-size: 14px;">
-              <strong>📌 Important:</strong> Save this email for your records. You can use this link to access your profile anytime.
-            </p>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Thank you for registering with us!</p>
-          <p style="font-size: 12px; color: #adb5bd;">
-            If you have any questions, please contact our support team.
-          </p>
         </div>
       </div>
     </body>

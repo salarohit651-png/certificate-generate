@@ -13,7 +13,7 @@ import { toast } from "sonner"
 
 interface User {
   _id: string
-  registrationFormTitle: string // Added new field
+  registrationFormTitle?: string // Added new field
   title: string
   name: string
   fatherHusbandName: string

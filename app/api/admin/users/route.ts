@@ -9,13 +9,9 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Unauthorized access" }, { status: 401 })
     }
 
-    console.log("[v0] Starting user fetch request...")
 
-    console.log("[v0] Connecting to database...")
     await connectDB()
-    console.log("[v0] Database connected successfully")
 
-    console.log("[v0] Querying all users...")
     const users = await User.find({
       $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
     })
@@ -46,7 +42,6 @@ export async function GET() {
       updatedAt: user.updatedAt?.toISOString() || new Date().toISOString(),
     }))
 
-    console.log(`[v0] Serialized ${serializedUsers.length} users for response`)
 
     const response = NextResponse.json({
       success: true,

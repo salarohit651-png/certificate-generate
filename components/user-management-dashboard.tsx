@@ -50,6 +50,7 @@ export function UserManagementDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [linkGenerating, setLinkGenerating] = useState<string | null>(null) // Track which user's link is being generated
   const router = useRouter()
 
   const getAuthHeaders = () => {
@@ -73,7 +74,6 @@ export function UserManagementDashboard() {
 
   const fetchUsers = async () => {
     try {
-      console.log("[v0] Attempting to fetch users...")
       const timestamp = Date.now()
       const response = await fetch(`/api/admin/users?t=${timestamp}&nocache=${Math.random()}`, {
         cache: "no-store",
@@ -81,32 +81,17 @@ export function UserManagementDashboard() {
       })
 
       if (!response.ok) {
-        console.error("[v0] Fetch failed with status:", response.status)
-        const errorText = await response.text()
-        console.error("[v0] Error response:", errorText)
-        throw new Error(`HTTP ${response.status}: ${errorText}`)
+        throw new Error(`HTTP ${response.status}`)
       }
 
       const data = await response.json()
-      console.log("[v0] Successfully fetched users:", data)
-      console.log("[v0] Number of users fetched:", data.users?.length || 0)
-      console.log("[v0] Total count from API:", data.totalCount)
-      if (data.users && data.users.length > 0) {
-        console.log("[v0] Latest 3 users:")
-        data.users.slice(0, 3).forEach((user, index) => {
-          console.log(`[v0] User ${index + 1}:`, {
-            id: user._id,
-            name: user.name,
-            email: user.emailId,
-            regNumber: user.registrationNumber,
-            createdAt: user.createdAt,
-          })
-        })
-      }
       setUsers(data.users || [])
     } catch (error) {
-      console.error("[v0] Error fetching users:", error)
       setUsers([])
+      toast.error("Failed to fetch users", {
+        description: "Please try refreshing the page",
+        duration: 4000,
+      })
     } finally {
       setLoading(false)
     }
@@ -114,14 +99,12 @@ export function UserManagementDashboard() {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      console.log("[v0] Attempting to delete user:", userId)
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
 
       const data = await response.json()
-      console.log("[v0] Delete response:", data)
 
       if (data.success) {
         setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId))
@@ -130,54 +113,73 @@ export function UserManagementDashboard() {
         toast.error(data.message || "Failed to delete user")
       }
     } catch (error) {
-      console.error("[v0] Error deleting user:", error)
-      toast.error("Error deleting user")
+      toast.error("Error deleting user", {
+        description: "Please try again later",
+        duration: 4000,
+      })
     }
   }
 
   const handleGenerateLink = async (user: User) => {
     try {
-      console.log("[v0] 🔗 Generating link for user:", user.name, "Email:", user.emailId)
+      setLinkGenerating(user._id)
+      const linkToCopy = `${process.env.NEXT_PUBLIC_BASE_URL}/user/login`;
 
-      const response = await fetch("/api/admin/generate-link", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ userId: user._id }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const link = data.publicUrl || `${window.location.origin}/user/${data.token}`
-        console.log("[v0] ✅ Link generated successfully:", link)
-
+      // Enhanced clipboard functionality
+      if (navigator.clipboard && window.isSecureContext) {
         try {
-          await navigator.clipboard.writeText(link)
-          console.log("[v0] 📋 Link copied to clipboard successfully!")
-          toast.success("🔗 User profile link copied to clipboard!", {
-            description: `Link for ${user.name} is ready to share`,
-            duration: 3000,
-          })
+          await navigator.clipboard.writeText(linkToCopy)
+          toast.success('Link copied to clipboard!')
         } catch (clipboardError) {
-          console.error("[v0] ❌ Failed to copy to clipboard:", clipboardError)
-          const textArea = document.createElement("textarea")
-          textArea.value = link
-          document.body.appendChild(textArea)
-          textArea.select()
-          document.execCommand("copy")
-          document.body.removeChild(textArea)
-          toast.success("🔗 Link copied to clipboard!", {
-            description: "Link generated and copied successfully",
-            duration: 3000,
-          })
+          // Fallback to older method
+          try {
+            const textArea = document.createElement('textarea')
+            textArea.value = linkToCopy
+            textArea.style.position = 'fixed'
+            textArea.style.left = '-999999px'
+            textArea.style.top = '-999999px'
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            const successful = document.execCommand('copy')
+            document.body.removeChild(textArea)
+            
+            if (successful) {
+              toast.success('Link copied to clipboard!')
+            } else {
+              throw new Error('Copy command failed')
+            }
+          } catch (fallbackError) {
+            toast.error('Failed to copy link to clipboard')
+          }
         }
       } else {
-        const errorData = await response.json()
-        console.error("[v0] ❌ Failed to generate link:", errorData)
-        toast.error(errorData.message || "Failed to generate link")
+        // Fallback for older browsers or non-secure contexts
+        try {
+          const textArea = document.createElement('textarea')
+          textArea.value = linkToCopy
+          textArea.style.position = 'fixed'
+          textArea.style.left = '-999999px'
+          textArea.style.top = '-999999px'
+          document.body.appendChild(textArea)
+          textArea.focus()
+          textArea.select()
+          const successful = document.execCommand('copy')
+          document.body.removeChild(textArea)
+          
+          if (successful) {
+            toast.success('Link copied to clipboard!')
+          } else {
+            throw new Error('Copy command failed')
+          }
+        } catch (legacyError) {
+          toast.error('Failed to copy link to clipboard')
+        }
       }
     } catch (error) {
-      console.error("[v0] ❌ Error in handleGenerateLink:", error)
-      toast.error("Error generating link")
+      toast.error('Failed to generate link')
+    } finally {
+      setLinkGenerating(null)
     }
   }
 
@@ -204,7 +206,10 @@ export function UserManagementDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Loading users...</div>
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
+          <div className="text-lg text-gray-600">Loading users...</div>
+        </div>
       </div>
     )
   }
@@ -232,7 +237,14 @@ export function UserManagementDashboard() {
               </div>
               <Badge variant="secondary">{filteredUsers.length} users found</Badge>
               <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
-                {loading ? "Refreshing..." : "Refresh"}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                    Refreshing...
+                  </div>
+                ) : (
+                  "Refresh"
+                )}
               </Button>
             </div>
           </div>
@@ -266,8 +278,17 @@ export function UserManagementDashboard() {
                         <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleGenerateLink(user)}>
-                          <Link className="h-4 w-4" />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleGenerateLink(user)}
+                          disabled={linkGenerating === user._id}
+                        >
+                          {linkGenerating === user._id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                          ) : (
+                            <Link className="h-4 w-4" />
+                          )}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

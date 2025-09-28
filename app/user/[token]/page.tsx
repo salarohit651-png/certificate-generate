@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import User from '@/models/User';
 import Image from 'next/image';
 import { decodeViewToken } from '@/lib/url-utils';
+import { UserLogoutButton } from '@/components/user-logout-button';
 
 interface UserViewPageProps {
   params: {
@@ -53,6 +54,11 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
 
   return (
     <div className="min-h-screen bg-[#89a9c2] flex items-center justify-center overflow-auto p-4">
+      {/* Logout button positioned at top right */}
+      <div className="fixed top-4 right-4 z-10">
+        <UserLogoutButton token={params.token} />
+      </div>
+
       {/* Fixed PDF container */}
       <div className="relative bg-[#e6eef0] rounded-md p-6 sm:w-[794px] w-full shadow-[18px_11px_4px_0px_#3333332e]">
         {/* Watermark */}
@@ -131,13 +137,13 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
 
           {/* Personal + Educational Info */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            {personalInfo.map((info) => (
+            {personalInfo.map(info => (
               <div key={info.label} className="flex flex-col">
                 <h3 className="font-bold text-sm">{info.label}:</h3>
                 <p className="text-base">{info.value}</p>
               </div>
             ))}
-            {educationalInfo.map((info) => (
+            {educationalInfo.map(info => (
               <div key={info.label} className="flex flex-col">
                 <h3 className="font-bold text-sm">{info.label}:</h3>
                 <p className="text-base">{info.value}</p>
@@ -176,6 +182,15 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
                 />
               </div>
             </div>
+            <div
+              style={{
+                position: 'relative',
+                bottom: '30px',
+                right: '30px',
+              }}
+            >
+              <img src="/images/stamp.png"></img>
+            </div>
             <div className="flex gap-4">
               {user.qrCodeUrl && (
                 <div className="text-center">
@@ -193,11 +208,11 @@ export default async function UserViewPage({ params }: UserViewPageProps) {
           </div>
 
           {/* Marquee */}
-          <div className="overflow-hidden whitespace-nowrap border border-gray-300 p-2 mt-8">
+          {/* <div className="overflow-hidden whitespace-nowrap border border-gray-300 p-2 mt-8">
             <span className="scroll-marquee cursor-pointer font-bold text-gray-800">
               Your registration completed with 1250/- rupee
             </span>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -340,7 +340,14 @@ export function UserRegistrationForm() {
           )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Registering User..." : "Register User"}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Registering User...
+              </div>
+            ) : (
+              "Register User"
+            )}
           </Button>
         </form>
       </CardContent>

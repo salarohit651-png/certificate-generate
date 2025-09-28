@@ -11,13 +11,30 @@ interface UserLogoutButtonProps {
 export function UserLogoutButton({ token }: UserLogoutButtonProps) {
   const router = useRouter()
 
-  const handleLogout = () => {
-    if (token) {
-      sessionStorage.removeItem(`user_session_${token}`)
+  const handleLogout = async () => {
+    try {
+      if (token) {
+        // Call logout API to invalidate the token
+        const response = await fetch("/api/user/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token }),
+        })
+
+
+
+        sessionStorage.removeItem(`user_session_${token}`)
+      }
+      
+      sessionStorage.removeItem("userToken")
+      sessionStorage.removeItem("userEmail")
+      router.push("/user/login")
+    } catch (error) {
+      // Still redirect to login even if API call fails
+      router.push("/user/login")
     }
-    sessionStorage.removeItem("userToken")
-    sessionStorage.removeItem("userEmail")
-    router.push("/user/login")
   }
 
   return (

@@ -2,7 +2,6 @@ import { cookies } from "next/headers"
 
 export function checkAdminAuth(): boolean {
   try {
-    console.log("[v0] Auth: Checking admin authentication")
     const cookieStore = cookies()
     const adminSession = cookieStore.get("admin-session")
 
@@ -25,8 +24,6 @@ export function clearAdminAuth() {
 }
 
 export function validateAdminCredentials(username: string, password: string): boolean {
-  console.log("[v0] Auth: Validating credentials for username:", username)
   const isValid = username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD
-  console.log("[v0] Auth: Credentials valid:", isValid)
   return isValid
 }

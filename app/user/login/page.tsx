@@ -61,11 +61,9 @@ export default function UserLogin() {
           setError("Login successful but profile link not found")
         }
       } else {
-        console.log("[v0] Login failed:", data.error)
         setError(data.error || "Login failed")
       }
     } catch (error) {
-      console.error("[v0] Login error:", error)
       setError("An error occurred. Please try again.")
     } finally {
       setLoading(false)
@@ -78,10 +76,9 @@ export default function UserLogin() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">User Login</CardTitle>
           <CardDescription>Enter your email and phone number to access your profile</CardDescription>
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
-              <strong>Note:</strong> Each login generates a new one-time access link. Previous links will become
-              invalid.
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> Each login generates an access link that remains valid until you log out. You can access your profile multiple times using the same link.
             </p>
           </div>
         </CardHeader>
