@@ -143,7 +143,7 @@ export function getRegistrationEmailTemplate(userData: UserData | string, access
             <p style="font-size: 16px; color: #495057; margin-bottom: 2px;">
               Click the button below to login your profile:
             </p>
-            <a href="${accessLink} class="access-button">
+            <a href="https://admin.healthandwelfareministry.live/user/login" class="access-button">
                Login Your Profile
             </a>
           </div>
