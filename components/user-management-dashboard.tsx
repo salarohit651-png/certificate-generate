@@ -123,7 +123,9 @@ export function UserManagementDashboard() {
   const handleGenerateLink = async (user: User) => {
     try {
       setLinkGenerating(user._id)
-      const linkToCopy = `${process.env.NEXT_PUBLIC_BASE_URL}/user/login`;
+      // Use window.location.origin to get the current domain instead of env variable
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const linkToCopy = `${baseUrl}/user/login`;
 
       // Enhanced clipboard functionality
       if (navigator.clipboard && window.isSecureContext) {

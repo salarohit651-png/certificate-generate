@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/mongodb"
-import User from "@/models/User"
-import AccessLink from "@/models/AccessLink"
-import bcrypt from "bcryptjs"
-import crypto from "crypto"
-import jwt from "jsonwebtoken"
+import { type NextRequest, NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongodb';
+import User from '@/models/User';
+import AccessLink from '@/models/AccessLink';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,9 +59,11 @@ export async function POST(request: NextRequest) {
 
     await accessLink.save();
 
-    const profileLink = `${
+    // Ensure clean URL construction without double slashes
+    const baseUrl = (
       process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-    }/user/${newToken}`;
+    ).replace(/\/$/, '');
+    const profileLink = `${baseUrl}/user/${newToken}`;
 
     const sessionToken = jwt.sign(
       {

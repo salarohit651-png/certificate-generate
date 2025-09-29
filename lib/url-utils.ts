@@ -2,12 +2,16 @@ import { connectDB } from '@/lib/mongodb';
 import AccessLink from '@/models/AccessLink';
 
 export function getLoginDomain(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  ).replace(/\/$/, '');
   return `${baseUrl}/user/profile`;
 }
 
 export function getPublicProfileLink(registrationNumber: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  ).replace(/\/$/, '');
   const token = generateViewToken(registrationNumber);
   return `${baseUrl}/user/${token}`;
 }
