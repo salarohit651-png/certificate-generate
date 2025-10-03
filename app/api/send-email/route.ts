@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = (
       process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     ).replace(/\/$/, '');
-    const accessLink = viewLink || `${baseUrl}/user/profile`;
+    const accessLink = viewLink || `${baseUrl}/user/login`;
 
     console.log('[v0] Using access link:', accessLink);
     console.log('[v0] Generating email template...');

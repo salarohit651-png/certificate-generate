@@ -83,6 +83,9 @@ export function getRegistrationEmailTemplate(userData: UserData | string, access
   const regNumber = typeof userData === "object" ? userData.registrationNumber : ""
   const courseName = typeof userData === "object" ? userData.courseName : ""
 
+  // Use the provided accessLink or construct the login URL
+  const loginUrl = accessLink.includes('/user/login') ? accessLink : `${accessLink}/user/login`
+
   return `
       <!DOCTYPE html>
     <html lang="en">
@@ -140,10 +143,10 @@ export function getRegistrationEmailTemplate(userData: UserData | string, access
           }
 
           <div style="text-align: center; margin: 30px 0;">
-            <p style="font-size: 16px; color: #495057; margin-bottom: 2px;">
-              Click the button below to login your profile:
+            <p style="font-size: 16px; color: #495057; margin-bottom: 20px;">
+              Click the button below to login to your profile:
             </p>
-            <a href="https://admin.healthandwelfareministry.live/user/login" class="access-button">
+            <a href="${loginUrl}" class="access-button">
                Login Your Profile
             </a>
           </div>
